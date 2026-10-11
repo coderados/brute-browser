@@ -1,0 +1,35 @@
+name: Build APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install japkgen
+        run: npm install -g japkgen
+
+      - name: Build APK
+        run: |
+          cd android
+          japkgen build . --template webview \
+            --name "Brute Browser" \
+            --package com.brute.browser \
+            --url "capacitor://localhost"
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: brute-browser
+          path: android/build/*.apk
