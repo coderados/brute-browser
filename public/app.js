@@ -1,6 +1,11 @@
 /* Brute Browser (Web) — app logic */
 'use strict';
 
+/* Dom references (declared first — the Notes/UA wiring below uses these at eval time) */
+const $ = (id) => document.getElementById(id);
+const addressIn = $('address'), viewport = $('viewport');
+const output = $('output'), jsCode = $('js-code');
+
 /* ---------- Notes ---------- */
 const BUNDLED_NOTES = [
   { name: 'Authorized pentest scripts', file: '/notes/authorized-pentest-scripts.txt' },
@@ -199,11 +204,6 @@ const UA_PRESETS = [
   { id: 'edge', name: 'Edge · Windows', ua: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36 Edg/124.0.0.0' },
   { id: 'googlebot', name: 'Googlebot', ua: 'Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/124.0.0.0 Safari/537.36' },
 ];
-
-/* ---------- Dom references ---------- */
-const $ = (id) => document.getElementById(id);
-const addressIn = $('address'), viewport = $('viewport');
-const output = $('output'), jsCode = $('js-code');
 
 /* ---------- Settings & history (localStorage) ---------- */
 const STORE_KEY = 'brute-web-v1';
