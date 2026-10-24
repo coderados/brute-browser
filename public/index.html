@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Brute Browser (Web)</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <header id="topbar">
+    <button id="btn-back" title="Back">&larr;</button>
+    <button id="btn-reload" title="Reload">&#8635;</button>
+    <form id="nav-form">
+      <input id="address" type="text" placeholder="https://example.com" autocomplete="off" spellcheck="false" />
+    </form>
+    <select id="ua-quick" title="User agent" class="ua-quick"></select>
+    <input id="ua-quick-custom" type="text" placeholder="Custom UA" class="hidden ua-quick" spellcheck="false" />
+    <button id="btn-tools" title="Tools">&#9776;</button>
+  </header>
+
+  <main id="main">
+    <div id="viewport-wrap">
+      <iframe id="viewport" sandbox="allow-scripts allow-forms allow-same-origin" title="Browsing viewport"></iframe>
+    </div>
+
+    <aside id="panel" class="hidden">
+      <nav id="tabs">
+        <button class="tab active" data-tab="tool">Tool</button>
+        <button class="tab" data-tab="cmds">Commands</button>
+        <button class="tab" data-tab="history">History</button>
+        <button class="tab" data-tab="notes">Notes</button>
+        <button class="tab" data-tab="settings">Settings</button>
+      </nav>
+
+      <!-- JS Inject -->
+      <section id="tab-tool" class="tabpane active">
+        <h3>JS Inject</h3>
+        <textarea id="js-code" rows="8" placeholder="return document.title;"></textarea>
+        <div id="snippet-hint" class="snippet-hint hidden"></div>
+        <button id="btn-run-js" class="primary">Run</button>
+        <div id="snippets"></div>
+        <div id="snippets"></div>
+        <h3>Output</h3>
+        <pre id="output" class="outbox"></pre>
+      </section>
+
+      <!-- Commands -->
+      <section id="tab-cmds" class="tabpane">
+        <h3>Developer commands</h3>
+        <ul id="cmd-list"></ul>
+        <button id="btn-refresh-cmds">Refresh &larr;</button>
+      </section>
+
+      <!-- History -->
+      <section id="tab-history" class="tabpane">
+        <h3>History</h3>
+        <ul id="history-list"></ul>
+        <button id="btn-clear-history">Clear history</button>
+      </section>
+
+      <!-- Notes -->
+      <section id="tab-notes" class="tabpane">
+        <h3>Notes</h3>
+        <ul id="note-list"></ul>
+        <button id="btn-new-note" class="primary">+ New note</button>
+        <div id="note-form" class="hidden">
+          <input id="note-title" type="text" placeholder="Note title" />
+          <textarea id="note-text" rows="6" placeholder="Paste or type text here, or upload a .txt file below"></textarea>
+          <input id="note-file" type="file" accept=".txt,.md,.log,.text,text/*" />
+          <button id="btn-note-save" class="primary">Save note</button>
+          <button id="btn-note-cancel">Cancel</button>
+        </div>
+        <div id="note-view" class="hidden">
+          <h3 id="note-view-title"></h3>
+          <pre id="note-view-text" class="outbox"></pre>
+          <button id="btn-note-close">Back to list &larr;</button>
+          <button id="btn-note-delete">Delete</button>
+        </div>
+      </section>
+
+      <!-- Settings -->      
+      <section id="tab-settings" class="tabpane">
+        <h3>User agent</h3>
+        <select id="ua-select"></select>
+        <input id="ua-custom" type="text" placeholder="Custom UA string" class="hidden" />
+        <h3>Toggles</h3>
+        <label><input type="checkbox" id="set-js" checked /> JavaScript</label>
+        <label><input type="checkbox" id="set-img" checked /> Images</label>
+        <label><input type="checkbox" id="set-ck" checked /> Cookies</label>
+        <h3>Proxy</h3>
+        <p class="hint">All pages are fetched through the Brute proxy so UA override and injection work. Sites that actively block proxies may fail.</p>
+      </section>
+    </aside>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

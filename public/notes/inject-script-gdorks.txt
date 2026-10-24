@@ -1,0 +1,442 @@
+AUTHORIZED SECURITY PROGRAM BUNDLE
+==================================
+
+Purpose:
+    Defensive validation of security controls using synthetic data,
+    non-destructive probes, and domain-scoped search queries.
+
+Requirements:
+    Python 3
+    python3 -m pip install requests
+
+Scope:
+    Use only on owned or explicitly authorized systems.
+    Do not use these templates to access credentials, private records,
+    restricted systems, or production data.
+
+
+1. SECURITY-HEADER SCANNER
+--------------------------
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 headers_scan.py https://staging.example.test")
+    sys.exit(1)
+
+url = sys.argv[1]
+response = requests.get(
+    url,
+    timeout=10,
+    headers={"User-Agent": "Authorized-Security-Test"}
+)
+
+headers_to_check = [
+    "Content-Security-Policy",
+    "Strict-Transport-Security",
+    "X-Content-Type-Options",
+    "Referrer-Policy",
+    "Permissions-Policy",
+    "Cross-Origin-Opener-Policy",
+    "Cross-Origin-Resource-Policy",
+]
+
+print("HTTP status:", response.status_code)
+
+for header in headers_to_check:
+    value = response.headers.get(header)
+    if value:
+        print("[+] " + header + ": " + value)
+    else:
+        print("[-] Missing: " + header)
+
+
+2. OPEN-REDIRECT CANARY CHECKER
+-------------------------------
+
+Purpose:
+    Tests whether a redirect parameter accepts an external destination.
+    Uses a reserved invalid domain and does not follow redirects.
+
+import sys
+import requests
+
+if len(sys.argv) != 3:
+    print("Usage: python3 redirect_check.py <url> <parameter>")
+    sys.exit(1)
+
+url = sys.argv[1]
+parameter = sys.argv[2]
+canary = "https://redirect-test.invalid/"
+
+response = requests.get(
+    url,
+    params={parameter: canary},
+    allow_redirects=False,
+    timeout=10,
+    headers={"User-Agent": "Authorized-Security-Test"}
+)
+
+location = response.headers.get("Location", "")
+
+print("HTTP status:", response.status_code)
+print("Location:", location)
+
+if response.is_redirect and canary in location:
+    print("[!] Possible open redirect")
+else:
+    print("[+] No direct open redirect observed")
+
+
+3. CSRF-PROTECTION CHECKER
+--------------------------
+
+Purpose:
+    Reviews whether a state-changing test endpoint rejects requests without
+    an anti-CSRF token. Use only against a disposable test action.
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 csrf_check.py <authorized-test-endpoint>")
+    sys.exit(1)
+
+url = sys.argv[1]
+
+response = requests.post(
+    url,
+    data={"action": "csrf_canary"},
+    timeout=10,
+    headers={
+        "User-Agent": "Authorized-Security-Test",
+        "Origin": "https://untrusted-origin.invalid",
+        "Referer": "https://untrusted-origin.invalid/test",
+    }
+)
+
+print("HTTP status:", response.status_code)
+
+if response.status_code in (401, 403, 405):
+    print("[+] Request rejected")
+else:
+    print("[!] Review whether the test action required CSRF protection")
+
+
+4. RATE-LIMIT VALIDATION SCRIPT
+-------------------------------
+
+Purpose:
+    Sends a small, bounded number of requests to a disposable test endpoint.
+    It is not a stress-testing tool.
+
+import sys
+import time
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 rate_limit_check.py <authorized-test-endpoint>")
+    sys.exit(1)
+
+url = sys.argv[1]
+request_count = 8
+delay_seconds = 1
+
+statuses = []
+
+for number in range(request_count):
+    response = requests.get(
+        url,
+        timeout=10,
+        headers={"User-Agent": "Authorized-Rate-Limit-Test"}
+    )
+
+    statuses.append(response.status_code)
+    print(f"Request {number + 1}: HTTP {response.status_code}")
+
+    if response.status_code == 429:
+        print("[+] Rate limiting observed")
+        break
+
+    time.sleep(delay_seconds)
+
+if 429 not in statuses:
+    print("[*] No HTTP 429 response observed during the bounded test")
+
+
+5. CORS TESTER
+--------------
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 cors_check.py https://staging.example.test/api/test")
+    sys.exit(1)
+
+url = sys.argv[1]
+origin = "https://origin-canary.invalid"
+
+response = requests.get(
+    url,
+    timeout=10,
+    headers={
+        "Origin": origin,
+        "User-Agent": "Authorized-Security-Test",
+    }
+)
+
+allow_origin = response.headers.get("Access-Control-Allow-Origin")
+allow_credentials = response.headers.get("Access-Control-Allow-Credentials")
+
+print("Allow-Origin:", allow_origin)
+print("Allow-Credentials:", allow_credentials)
+
+if allow_origin == origin and allow_credentials == "true":
+    print("[!] Review reflected origin with credentials")
+elif allow_origin == origin:
+    print("[!] Origin was reflected; review intended policy")
+else:
+    print("[+] No arbitrary-origin reflection observed")
+
+
+6. HTTP METHOD VALIDATION
+-------------------------
+
+Purpose:
+    Checks whether unexpected methods are accepted on a test endpoint.
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 method_check.py <authorized-test-endpoint>")
+    sys.exit(1)
+
+url = sys.argv[1]
+methods = ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS", "TRACE"]
+
+for method in methods:
+    response = requests.request(
+        method,
+        url,
+        timeout=10,
+        headers={"User-Agent": "Authorized-Method-Test"}
+    )
+
+    print(f"{method:8} HTTP {response.status_code}")
+
+    if method == "TRACE" and response.status_code < 400:
+        print("[!] TRACE may be enabled; review server configuration")
+
+
+7. DIRECTORY-LISTING CHECKER
+----------------------------
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 listing_check.py https://staging.example.test")
+    sys.exit(1)
+
+base_url = sys.argv[1].rstrip("/")
+paths = ["/uploads/", "/assets/", "/static/", "/backups/"]
+
+for path in paths:
+    response = requests.get(
+        base_url + path,
+        timeout=10,
+        headers={"User-Agent": "Authorized-Exposure-Test"}
+    )
+
+    body = response.text.lower()
+    indicators = [
+        "index of /",
+        "directory listing",
+        "<title>index of",
+    ]
+
+    if any(indicator in body for indicator in indicators):
+        print("[!] Possible directory listing:", path)
+    else:
+        print("[-] No listing indicator:", path)
+
+
+8. SECURITY.TXT CHECKER
+-----------------------
+
+Purpose:
+    Checks whether a vulnerability disclosure contact is published.
+
+import sys
+import requests
+
+if len(sys.argv) != 2:
+    print("Usage: python3 security_txt_check.py https://example.com")
+    sys.exit(1)
+
+base_url = sys.argv[1].rstrip("/")
+url = base_url + "/.well-known/security.txt"
+
+response = requests.get(
+    url,
+    timeout=10,
+    headers={"User-Agent": "Authorized-Security-Test"}
+)
+
+print("HTTP status:", response.status_code)
+
+if response.status_code == 200:
+    print(response.text[:2000])
+else:
+    print("[-] security.txt was not found or was inaccessible")
+
+
+9. TEST-DATA ACCESS-CONTROL CHECK
+---------------------------------
+
+import os
+import requests
+
+base_url = os.environ.get(
+    "PENTEST_BASE_URL",
+    "https://staging.example.test"
+)
+
+token = os.environ["PENTEST_TEST_TOKEN"]
+
+test_cases = [
+    ("own-record", "TEST-RECORD-001", {200}),
+    ("other-tenant-record", "TEST-RECORD-002", {401, 403, 404}),
+    ("nonexistent-record", "TEST-RECORD-999", {404}),
+]
+
+for name, record_id, expected in test_cases:
+    response = requests.get(
+        f"{base_url}/api/test-records/{record_id}",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "User-Agent": "Authorized-Access-Control-Test",
+        },
+        timeout=10,
+    )
+
+    result = "PASS" if response.status_code in expected else "FAIL"
+
+    print(
+        f"[{result}] {name}: "
+        f"HTTP {response.status_code}; expected {sorted(expected)}"
+    )
+
+    if response.status_code == 200 and "TEST-ONLY" not in response.text:
+        print("[WARN] Expected synthetic-data marker was missing")
+
+
+10. CONTROLLED DLP CANARY
+-------------------------
+
+Purpose:
+    Sends only fake data to an organization-owned test sink.
+
+import os
+import requests
+
+sink_url = os.environ["AUTHORIZED_DLP_SINK_URL"]
+
+payload = {
+    "exercise": "DLP-CONTROL-VALIDATION",
+    "classification": "SYNTHETIC-TEST-DATA",
+    "marker": "PENTEST-EXFIL-CANARY-001",
+    "records": [
+        {"id": "TEST-001", "value": "fake-data"},
+        {"id": "TEST-002", "value": "fake-data"},
+    ],
+}
+
+response = requests.post(
+    sink_url,
+    json=payload,
+    timeout=10,
+    headers={"User-Agent": "Authorized-DLP-Exercise"}
+)
+
+print("HTTP status:", response.status_code)
+
+if response.ok:
+    print("[+] Canary reached the approved sink")
+else:
+    print("[*] Canary was blocked or delivery failed")
+
+
+GOOGLE SEARCH QUERIES FOR AUTHORIZED DOMAIN AUDITING
+====================================================
+
+Replace example.com with a domain you control.
+
+Basic indexed asset inventory:
+    site:example.com
+
+Subdomain discovery:
+    site:example.com -www
+
+Public documents:
+    site:example.com filetype:pdf
+    site:example.com filetype:doc
+    site:example.com filetype:docx
+    site:example.com filetype:xlsx
+    site:example.com filetype:pptx
+
+Potentially outdated documents:
+    site:example.com ("confidential" OR "internal" OR "draft")
+    site:example.com ("deprecated" OR "obsolete" OR "legacy")
+
+Public source or configuration files:
+    site:example.com filetype:log
+    site:example.com filetype:xml
+    site:example.com filetype:json
+    site:example.com filetype:yaml
+    site:example.com filetype:yml
+    site:example.com filetype:env
+
+Public development and documentation areas:
+    site:example.com inurl:dev
+    site:example.com inurl:staging
+    site:example.com inurl:test
+    site:example.com inurl:docs
+    site:example.com inurl:swagger
+    site:example.com inurl:openapi
+
+Potential error pages:
+    site:example.com ("exception" OR "stack trace" OR "database error")
+    site:example.com ("warning:" OR "fatal error" OR "debug")
+
+Potential directory indexes:
+    site:example.com intitle:"index of"
+    site:example.com intitle:"directory listing"
+
+Potential exposed backups:
+    site:example.com (filetype:bak OR filetype:old OR filetype:backup)
+    site:example.com ("backup" OR "archive") filetype:zip
+
+Public login and administration pages:
+    site:example.com (inurl:login OR inurl:signin OR inurl:admin)
+
+Public API references:
+    site:example.com inurl:api
+    site:example.com ("API documentation" OR "API reference")
+
+Use caution:
+    Do not search for or collect real passwords, session tokens, personal
+    records, private keys, or financial information. If a query reveals
+    sensitive content, record only the URL, stop accessing the content,
+    notify the asset owner, and follow the organization's disclosure process.
+
+Suggested workflow:
+    1. Run domain-scoped searches.
+    2. Compare results with the approved asset inventory.
+    3. Report unexpected indexed assets without downloading sensitive files.
+    4. Request removal through the search-engine webmaster process.
+    5. Fix access controls and prevent indexing with authentication,
+       robots directives where appropriate, and correct server configuration.

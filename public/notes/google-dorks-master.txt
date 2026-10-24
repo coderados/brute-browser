@@ -1,0 +1,136 @@
+AUTHORIZED GOOGLE DORKS FOR DEFENSIVE RECONNAISSANCE (MASTER LIST)
+===================================================================
+
+Use these queries only on domains and systems you own or are explicitly authorized to assess. Replace:
+- example.com with your authorized domain
+- your-email@example.com with your own email address only
+
+Google search results are incomplete and may be outdated. Treat findings as leads, not proof of a vulnerability.
+Do not download, use, or redistribute exposed personal data, passwords, API keys, tokens, or private documents.
+
+-------------------------------------------------------------------
+PART 1: RECONNAISSANCE QUERIES
+-------------------------------------------------------------------
+
+1. Discover indexed pages
+   site:example.com
+   Usage: Lists pages from the domain Google has indexed. Understand what content is publicly discoverable.
+
+2. Find non-primary subdomains or pages
+   site:example.com -www
+   Usage: Identifies indexed subdomains and pages outside the main www host. Verify each is active and intended to be public.
+
+3. Locate administrative login pages
+   site:example.com (inurl:admin OR inurl:login OR inurl:portal)
+   Usage: Identifies indexed admin/auth pages for access-control review. Confirm they require authentication.
+
+4. Find directory listings
+   site:example.com (intitle:"index of" OR intitle:"directory listing")
+   Usage: Checks whether folders may be publicly browsable. Do not open or download sensitive files; disable listing where not required.
+
+5. Find publicly indexed office documents
+   site:example.com (ext:pdf OR ext:doc OR ext:docx OR ext:xls OR ext:xlsx)
+   Usage: Lists indexed documents to verify only intended public materials are exposed.
+
+6. Locate API documentation
+   site:example.com (inurl:api OR inurl:swagger OR inurl:openapi)
+   Usage: Finds indexed API endpoints/docs. Confirm they do not reveal private endpoints or sensitive schemas.
+
+7. Identify development and staging environments
+   site:example.com (inurl:staging OR inurl:dev OR inurl:test OR inurl:uat)
+   Usage: Finds environments that may have been indexed accidentally. These should require authentication and hold no production data.
+
+8. Find possible archived or backup paths
+   site:example.com (inurl:backup OR inurl:old OR inurl:archive)
+   Usage: Locates old pages or backup directories to be removed or access-controlled.
+
+9. Find common administration tools
+   site:example.com (inurl:wp-admin OR inurl:phpmyadmin OR inurl:jenkins)
+   Usage: Identifies indexed admin interfaces; confirm each is protected and intentionally public.
+
+10. Review crawler and sitemap files
+    site:example.com (inurl:robots.txt OR inurl:sitemap.xml)
+    Usage: Locates files revealing site structure or hidden paths. robots.txt is not an access-control mechanism.
+
+-------------------------------------------------------------------
+PART 2: DEFENSIVE EXPOSURE CHECKS
+-------------------------------------------------------------------
+These identify potentially exposed material; do not retrieve sensitive contents.
+
+1. Configuration files
+   site:example.com (ext:env OR ext:ini OR ext:conf OR ext:config)
+   Usage: Finds indexed config files. Remove them from public directories and rotate any secrets.
+
+2. Logs and database-related files
+   site:example.com (ext:log OR ext:bak OR ext:old OR ext:sql)
+   Usage: Identifies exposed logs, backups, or exports that should not be public.
+
+3. Exposed Git metadata
+   site:example.com (ext:git OR inurl:.git)
+   Usage: Finds indexed Git paths. A public repo directory can reveal source code and history; rotate secrets in repo history.
+
+4. Compressed archives
+   site:example.com (ext:zip OR ext:tar OR ext:gz OR ext:7z)
+   Usage: Finds archives that may contain backups, source code, or private documents. Confirm each is intentionally public.
+
+5. Open directory indexes
+   site:example.com ("Index of /" OR "Parent Directory")
+   Usage: Searches for directory-listing pages. Disable directory browsing unless required.
+
+6. Debug or error output
+   site:example.com ("debug" OR "stack trace" OR "exception")
+   Usage: Identifies pages disclosing paths, DB details, or debug data.
+
+7. Server diagnostic pages
+   site:example.com ("server-status" OR "server-info")
+   Usage: Finds diagnostic pages; restrict to admins or disable.
+
+8. Indexed error pages
+   site:example.com ("access denied" OR "forbidden" OR "internal server error")
+   Usage: Locates error responses revealing implementation details or misconfigured routes.
+
+9. GraphQL and API interfaces
+   site:example.com (inurl:graphql OR inurl:api-docs OR inurl:redoc)
+   Usage: Identifies API interfaces/docs to review for unintended schema exposure.
+
+10. Technology and version disclosure
+    site:example.com (" powered by " OR inurl:version)
+    Usage: Finds pages disclosing frameworks/versions. Remove version info and keep software patched.
+
+-------------------------------------------------------------------
+PART 3: PERSONAL BREACH-CHECKING GUIDANCE
+-------------------------------------------------------------------
+Do not search for passwords, recovery codes, API keys, session tokens, or other secrets.
+
+Check an email address:
+    "your-email@example.com"
+    Usage: Finds publicly indexed pages mentioning your own email. No results do not prove it was never leaked.
+
+Safer account checks (prefer these over search):
+1. Check your email with a reputable breach-notification service (e.g. Have I Been Pwned).
+2. Run your password manager's compromised-password report.
+3. Change passwords reused across services.
+4. Enable MFA or passkeys.
+5. Review active sessions and third-party app permissions.
+6. Check recovery emails/phones and unexpected forwarding rules.
+7. Rotate exposed API keys immediately.
+8. Sign out unknown devices; revoke suspicious sessions.
+9. Never enter a password or security token into a search engine.
+
+-------------------------------------------------------------------
+PART 4: REMEDIATION CHECKLIST
+-------------------------------------------------------------------
+If you find an exposure:
+- Capture only the minimum evidence needed to document it.
+- Do not download or share private files.
+- Remove the exposed file or restrict access.
+- Disable directory listing if unnecessary.
+- Remove secrets from source code and configuration files.
+- Rotate passwords, API keys, tokens, and certificates.
+- Invalidate active sessions if auth data may be exposed.
+- Remove debug output and detailed error messages.
+- Request removal of cached/indexed content where appropriate.
+- Review server logs for unauthorized access.
+- Re-scan after remediation.
+
+Authorization reminder: these queries are for authorized defensive testing only; results are leads, not proof of vulnerability.

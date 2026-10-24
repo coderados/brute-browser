@@ -1,0 +1,44 @@
+GOOGLE DORK LISTS (PART 2 — QUICK SET)
+======================================
+
+1. Discover indexed pages
+   site:example.com
+   Usage: Lists indexed pages from the domain.
+
+2. Find non-primary subdomains
+   site:example.com -www
+   Usage: Helps reveal indexed subdomains and hosts outside the primary www address. Review whether each result is still active and intended to be public.
+
+3. Locate administrative pages
+   site:example.com (inurl:admin OR inurl:login OR inurl:portal)
+   Usage: Identifies indexed login and administration pages. Confirm that these pages require appropriate authentication and access controls.
+
+4. Find directory listings
+   site:example.com (intitle:"index of" OR intitle:"directory listing")
+   Usage: Searches for publicly browsable directories. Confirm that directory indexing is disabled where it is not required.
+
+5. Find indexed documents
+   site:example.com (ext:pdf OR ext:doc OR ext:docx OR ext:xls OR ext:xlsx)
+   Usage: Lists indexed documents so you can verify that only intentionally public files are available.
+
+6. Locate API documentation
+   site:example.com (inurl:api OR inurl:swagger OR inurl:openapi)
+   Usage: Finds indexed API endpoints and documentation. Check that private endpoints, internal schemas, and administrative functions are not disclosed.
+
+7. Identify development environments
+   site:example.com (inurl:staging OR inurl:dev OR inurl:test OR inurl:uat)
+   Usage: Searches for dev/test/staging environments. These should be access-controlled and separated from production data.
+
+8. Find archived or backup paths
+   site:example.com (inurl:backup OR inurl:old OR inurl:archive)
+   Usage: Locates old pages and possible backup paths. Remove obsolete material or restrict access where appropriate.
+
+9. Find common administration tools
+   site:example.com (inurl:wp-admin OR inurl:phpmyadmin OR inurl:jenkins)
+   Usage: Searches for indexed administration interfaces. Confirm each is intentionally exposed and protected by strong authentication.
+
+10. Review robots and sitemap files
+    site:example.com (inurl:robots.txt OR inurl:sitemap.xml)
+    Usage: Locates files that may reveal site structure or URLs. robots.txt is not an access-control mechanism.
+
+Reminder: use only against domains you own or are authorized to assess. Treat results as leads, not proof of vulnerability. Do not download or use private information that surfaces.
